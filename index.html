@@ -56,7 +56,6 @@
         .setting-card label { display: flex; justify-content: space-between; font-size: 1.8rem; margin-bottom: 20px; color: #94a3b8; }
         .setting-card span { color: var(--primary); font-weight: bold; font-size: 2rem; }
 
-        /* 巨大的滑桿 */
         input[type=range] {
             -webkit-appearance: none; width: 100%; height: 28px; 
             background: #334155; border-radius: 14px; outline: none; accent-color: var(--primary);
@@ -69,21 +68,20 @@
             padding: 15px; font-size: 1.5rem; border-radius: 15px; text-align: center; width: 100%;
         }
 
-        /* 題目顯示區域：外層容器負責藏起超出的部分，內層文字負責計算寬度 */
+        /* 題目顯示區域：固定高度，內層文字絕對不換行 */
         #q-wrap {
             width: 100%;
-            height: 120px; /* 固定高度避免版面跳動 */
-            margin: 40px 0;
+            height: 140px; 
+            margin: 30px 0;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            white-space: nowrap;
         }
         #q-text {
             font-weight: 900;
             white-space: nowrap;
-            transition: font-size 0.1s ease-out; /* 縮放時更平滑 */
+            /* 移除了 transition，確保瞬間呈現 */
         }
 
         .input-wrap { display: flex; justify-content: center; align-items: center; gap: 20px; }
@@ -165,7 +163,7 @@
             <input type="number" id="ans-main" placeholder="?">
             <input type="number" id="ans-rem" style="display:none" placeholder="R">
         </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 50px;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 40px;">
             <button class="btn-action btn-confirm" onclick="check()">CONFIRM</button>
             <button class="btn-action btn-skip" onclick="skip()">SKIP</button>
         </div>
@@ -237,42 +235,56 @@
         return { text: txt, ans: res, rem: 0 };
     }
 
-    // 核心解決方案：精確動態縮放字體
-    function adjustFontSize() {
-        const wrap = document.getElementById('q-wrap');
-        const text = document.getElementById('q-text');
+    // 核心數學比例測量引擎
+    function getPerfectFontSize(text, containerWidth) {
+        // 1. 建立隱形的尺
+        let ruler = document.createElement('span');
+        ruler.style.visibility = 'hidden';
+        ruler.style.position = 'absolute';
+        ruler.style.whiteSpace = 'nowrap';
+        ruler.style.fontWeight = '900';
+        ruler.style.fontFamily = "'Inter', sans-serif";
+        ruler.style.fontSize = '100px'; // 基準大小
+        ruler.innerText = text;
+        document.body.appendChild(ruler);
+
+        // 2. 取得在 100px 時的精確寬度
+        let textWidth = ruler.offsetWidth;
+        document.body.removeChild(ruler);
+
+        // 3. 計算比例 (留下 5% 的安全邊距)
+        let ratio = (containerWidth * 0.95) / textWidth;
         
-        // 先重置回最大字體來測量真實需要的寬度
-        let size = 80; // 最大字體 80px
-        text.style.fontSize = size + 'px';
-        
-        // 如果文字真實寬度超過外層容器寬度的 95%，就開始縮小
-        while(text.offsetWidth > (wrap.clientWidth * 0.95) && size > 10) {
-            size -= 1; // 每次縮小 1px
-            text.style.fontSize = size + 'px';
-        }
+        // 4. 回傳最終大小，最大不超過 120px
+        return Math.min(100 * ratio, 120);
     }
 
-    // 當視窗大小改變時，重新計算字體大小
-    window.addEventListener('resize', () => {
-        if(document.getElementById('screen-game').classList.contains('active')) {
-            adjustFontSize();
-        }
-    });
-
     function render() {
+        const wrap = document.getElementById('q-wrap');
         const qText = document.getElementById('q-text');
         let q = game.pool[game.idx];
-        qText.innerText = q.text;
         
-        // 文字塞入後，立刻執行精確縮放
-        adjustFontSize();
+        // 計算完 -> 設定大小 -> 塞入文字 (完全不會有縮放動畫)
+        let finalSize = getPerfectFontSize(q.text, wrap.clientWidth);
+        qText.style.fontSize = Math.floor(finalSize) + 'px';
+        qText.innerText = q.text;
         
         document.getElementById('ans-main').value = '';
         document.getElementById('ans-rem').value = '';
         document.getElementById('info-progress').innerText = (conf.mode === 'unlimited') ? '♾️' : `${game.idx + 1}/${game.pool.length}`;
         document.getElementById('ans-main').focus();
     }
+
+    // 視窗大小改變時，瞬間重算
+    window.addEventListener('resize', () => {
+        if(document.getElementById('screen-game').classList.contains('active')) {
+            const wrap = document.getElementById('q-wrap');
+            const qText = document.getElementById('q-text');
+            let q = game.pool[game.idx];
+            let finalSize = getPerfectFontSize(q.text, wrap.clientWidth);
+            qText.style.fontSize = Math.floor(finalSize) + 'px';
+        }
+    });
 
     function check() {
         let q = game.pool[game.idx];

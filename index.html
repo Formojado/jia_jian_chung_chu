@@ -1,154 +1,183 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Master | 算術大師</title>
+    <title>Math Matrix Pro | Ultimate Edition</title>
     <style>
         :root {
-            --bg: #1e293b; /* 深灰藍，不那麼黑，更清晰 */
-            --card-bg: #f8fafc;
-            --primary: #3b82f6;
-            --accent: #10b981;
-            --warn: #ef4444;
-            --text-dark: #1e293b;
-            --text-light: #f1f5f9;
+            --bg: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --green: #22c55e;
+            --orange: #f97316;
+            --red: #ef4444;
+            --text: #f8fafc;
         }
 
         body {
             background-color: var(--bg);
-            color: var(--text-light);
-            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         #app {
-            width: 90vw;
-            max-width: 900px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 95vw;
+            max-width: 1000px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
 
         .screen { display: none; }
-        .active { display: block; animation: fadeIn 0.4s ease; }
+        .active { display: block; animation: fadeIn 0.3s ease; }
 
-        /* 題目顯示區 */
-        #question-box {
-            font-size: clamp(2.5rem, 8vw, 5.5rem);
-            margin: 40px 0;
-            font-weight: 800;
-            color: #fff;
-        }
+        h1 { font-size: 3.5rem; margin-bottom: 30px; letter-spacing: -1px; }
 
-        /* 輸入框 */
-        .input-group { display: flex; justify-content: center; align-items: center; gap: 15px; }
-        input[type=number] {
-            background: #f1f5f9;
-            border: 3px solid transparent;
-            border-radius: 12px;
-            color: var(--text-dark);
-            font-size: 3rem;
-            width: 180px;
-            padding: 10px;
-            text-align: center;
-            outline: none;
-            -moz-appearance: textfield;
-        }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-        /* 按鈕 */
-        .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        /* Buttons */
+        .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
         .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
             padding: 20px;
             font-size: 1.2rem;
             font-weight: bold;
+            border: none;
             border-radius: 12px;
             cursor: pointer;
             transition: 0.2s;
+            color: white;
+            background: var(--green);
         }
-        .btn:hover, .btn.selected { transform: translateY(-3px); filter: brightness(1.2); }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-warn { background: var(--warn); }
+        .btn-orange { background: var(--orange); }
+        .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
+        .btn-red { background: var(--red); }
+        .btn:hover, .btn.selected { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
-        .status-bar { display: flex; justify-content: space-around; font-size: 1.2rem; margin-bottom: 20px; color: #94a3b8; }
-        .skipped-count { color: var(--warn); font-weight: bold; }
+        /* Game UI */
+        #question-area {
+            font-size: clamp(2rem, 8vw, 5rem);
+            margin: 50px 0;
+            font-weight: 800;
+            word-wrap: break-word;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .input-group { display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+        input[type=number] {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 12px;
+            color: #1e293b;
+            font-size: 3rem;
+            width: 250px;
+            padding: 15px;
+            text-align: center;
+            outline: none;
+        }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        .status-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 15px; 
+            background: rgba(0,0,0,0.2); 
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        .setting-row { margin: 20px 0; text-align: left; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; }
+        label { display: block; margin-bottom: 10px; color: #94a3b8; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="screen-menu" class="screen active">
-        <h1 style="font-size: 3rem;">Math Master</h1>
+        <h1>MATH MATRIX</h1>
         <div class="btn-grid">
-            <button class="btn nav-item" onclick="setMode('add')">加法 (+)</button>
-            <button class="btn nav-item" onclick="setMode('sub')">減法 (−)</button>
-            <button class="btn nav-item" onclick="setMode('mul')">乘法 (×)</button>
-            <button class="btn nav-item" onclick="setMode('div')">除法 (÷)</button>
-            <button class="btn btn-outline nav-item" onclick="setMode('mix')">混合運算</button>
+            <button class="btn nav-item" onclick="setOp('add')">ADDITION (+)</button>
+            <button class="btn nav-item" onclick="setOp('sub')">SUBTRACTION (−)</button>
+            <button class="btn nav-item" onclick="setOp('mul')">MULTIPLICATION (×)</button>
+            <button class="btn nav-item" onclick="setOp('div')">DIVISION (÷)</button>
+            <button class="btn btn-orange nav-item" onclick="setOp('mix')">MIXED MODE</button>
+            <button class="btn nav-item" style="grid-column: 1/-1" onclick="initGame('free')">NO LIMITS (FREE PLAY)</button>
         </div>
     </div>
 
     <div id="screen-setup" class="screen">
-        <h2 id="setup-title">練習設定</h2>
-        <div style="margin-bottom: 30px;">
-            <p>位數：<span id="digit-val">1</span></p>
-            <input type="range" min="1" max="4" value="1" style="width: 80%" oninput="updateSetupText('digit', this.value)">
-            <p>運算項數：<span id="count-val">2</span></p>
-            <input type="range" min="2" max="4" value="2" style="width: 80%" oninput="updateSetupText('count', this.value)">
+        <h2 id="setup-title">CHALLENGE CONFIG</h2>
+        
+        <div class="setting-row">
+            <label>Digits: <span id="val-digits">1</span></label>
+            <input type="range" min="1" max="8" value="1" style="width:100%" oninput="updateSetting('digits', this.value)">
         </div>
+        
+        <div class="setting-row">
+            <label>Terms (Numbers per question): <span id="val-terms">2</span></label>
+            <input type="range" min="2" max="8" value="2" style="width:100%" oninput="updateSetting('terms', this.value)">
+        </div>
+
+        <div id="custom-inputs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="flex:1">
+                <label>Sprint Goal (Questions)</label>
+                <input type="number" id="custom-sprint" value="10" style="width:100%; font-size: 1.5rem; border-radius: 8px;">
+            </div>
+            <div style="flex:1">
+                <label>Timed Limit (Seconds)</label>
+                <input type="number" id="custom-timed" value="60" style="width:100%; font-size: 1.5rem; border-radius: 8px;">
+            </div>
+        </div>
+
         <div class="btn-grid">
-            <button class="btn nav-item" onclick="initGame('sprint')">碼表速跑 (10題)</button>
-            <button class="btn nav-item" onclick="initGame('timed')">限時挑戰 (60s)</button>
-            <button class="btn btn-warn nav-item" onclick="showScreen('screen-menu')">取消</button>
+            <button class="btn nav-item" onclick="initGame('sprint')">START SPRINT</button>
+            <button class="btn nav-item" onclick="initGame('timed')">START TIMED</button>
+            <button class="btn btn-red nav-item" onclick="showScreen('screen-menu')">BACK</button>
         </div>
     </div>
 
     <div id="screen-game" class="screen">
         <div class="status-bar">
-            <span>模式: <span id="game-info">--</span></span>
-            <span>進度: <span id="progress">0/10</span></span>
-            <span>待補做: <span class="skipped-count" id="skipped-num">0</span></span>
-            <span>時間: <span id="timer">00:00</span></span>
+            <span>MODE: <span id="info-mode">--</span></span>
+            <span id="stat-progress">PROGRESS: 0/0</span>
+            <span style="color:var(--red)">SKIPPED: <span id="info-skipped">0</span></span>
+            <span id="info-timer">00:00</span>
         </div>
-        <div id="question-box">--</div>
+        
+        <div id="question-area">QUESTION</div>
+
         <div class="input-group">
-            <input type="number" id="ans-q" class="nav-item" placeholder="答">
-            <div id="div-rem-box" style="display: none;">
-                <span style="font-size: 2rem;">餘</span>
-                <input type="number" id="ans-r" class="nav-item" placeholder="餘">
+            <input type="number" id="ans-main" class="nav-item" placeholder="Ans">
+            <div id="rem-box" style="display:none">
+                <span style="font-size: 2rem;">REM</span>
+                <input type="number" id="ans-rem" class="nav-item" placeholder="Rem">
             </div>
         </div>
-        <div class="btn-grid" style="margin-top: 40px;">
-            <button class="btn nav-item" onclick="checkAnswer()">確認 (Enter)</button>
-            <button class="btn btn-outline nav-item" onclick="skipQuestion()">跳過 (ArrowDown)</button>
+
+        <div class="btn-grid" style="margin-top: 50px;">
+            <button class="btn nav-item" onclick="checkAnswer()">CONFIRM (Enter)</button>
+            <button class="btn btn-outline nav-item" onclick="skipQuestion()">SKIP (ArrowDown)</button>
         </div>
     </div>
 </div>
 
 <script>
-    let config = { type: '', digits: 1, count: 2, gameMode: '' };
+    let conf = { op: '', digits: 1, terms: 2, mode: '', goal: 10, timeLimit: 60 };
     let game = {
-        questions: [],
+        pool: [],
         skipped: [],
-        currentIndex: 0,
-        correctCount: 0,
+        index: 0,
         startTime: 0,
-        timerId: null,
-        isFinished: false
+        timer: null
     };
 
     function showScreen(id) {
@@ -156,141 +185,135 @@
         document.getElementById(id).classList.add('active');
     }
 
-    function setMode(type) {
-        config.type = type;
-        document.getElementById('setup-title').innerText = `${type.toUpperCase()} 模式設定`;
+    function setOp(op) {
+        conf.op = op;
+        document.getElementById('setup-title').innerText = `${op.toUpperCase()} SETTINGS`;
         showScreen('screen-setup');
     }
 
-    function updateSetupText(key, val) {
-        config[key] = parseInt(val);
-        document.getElementById(`${key}-val`).innerText = val;
+    function updateSetting(key, val) {
+        conf[key] = parseInt(val);
+        document.getElementById(`val-${key}`).innerText = val;
     }
 
     function initGame(mode) {
-        config.gameMode = mode;
-        game = { questions: [], skipped: [], currentIndex: 0, correctCount: 0, startTime: Date.now(), isFinished: false };
+        conf.mode = mode;
+        conf.goal = parseInt(document.getElementById('custom-sprint').value) || 10;
+        conf.timeLimit = parseInt(document.getElementById('custom-timed').value) || 60;
         
-        // 預生成 10 題
-        for(let i=0; i<10; i++) game.questions.push(generateQuestionData());
+        game = { pool: [], skipped: [], index: 0, startTime: Date.now() };
         
-        document.getElementById('game-info').innerText = `${config.type} | ${mode}`;
-        document.getElementById('div-rem-box').style.display = config.type === 'div' ? 'flex' : 'none';
+        // Prep questions
+        let count = mode === 'free' ? 999 : conf.goal;
+        for(let i=0; i<count; i++) game.pool.push(generateMath());
+
+        document.getElementById('info-mode').innerText = conf.op.toUpperCase();
+        document.getElementById('rem-box').style.display = conf.op === 'div' ? 'flex' : 'none';
         
         showScreen('screen-game');
-        renderQuestion();
-        startTimer();
+        render();
+        startClock();
     }
 
-    function generateQuestionData() {
+    function generateMath() {
         let nums = [];
-        for(let i=0; i<config.count; i++) {
-            let max = Math.pow(10, config.digits) - 1;
-            let min = Math.pow(10, config.digits - 1);
+        for(let i=0; i<conf.terms; i++) {
+            let max = Math.pow(10, conf.digits) - 1;
+            let min = Math.pow(10, conf.digits - 1);
             nums.push(Math.floor(Math.random() * (max - min + 1)) + min);
         }
 
-        let text = '', ans = 0, rem = 0;
-        if(config.type === 'div') {
-            // 除法鎖定被除數為設定位數
-            let a = nums[0];
-            let b = Math.floor(Math.random() * 89) + 2; // 除數固定 1-2 位
-            text = `${a} ÷ ${b}`;
-            ans = Math.floor(a / b);
-            rem = a % b;
-        } else {
-            // 加減乘混合邏輯
-            ans = nums[0];
-            text = nums[0].toString();
-            for(let i=1; i<nums.length; i++) {
-                let op = config.type === 'mix' ? ['+','-','*'][Math.floor(Math.random()*3)] : (config.type === 'add' ? '+' : (config.type === 'sub' ? '-' : '*'));
-                if(op === '+') { ans += nums[i]; text += ` + ${nums[i]}`; }
-                else if(op === '-') { 
-                    if(ans < nums[i]) { // 避免負數
-                        text = `${nums[i]} - ${text}`;
-                        ans = nums[i] - ans;
-                    } else {
-                        text += ` - ${nums[i]}`;
-                        ans -= nums[i];
-                    }
-                }
-                else { ans *= nums[i]; text = `(${text}) × ${nums[i]}`; }
-            }
+        if(conf.op === 'div') {
+            let a = nums[0]; // Dividend locked to digits
+            let b = Math.floor(Math.random() * 98) + 2; // Divisor stays 1-2 digits for sanity
+            return { text: `${a} ÷ ${b}`, ans: Math.floor(a/b), rem: a%b };
         }
-        return { text, ans, rem };
+
+        // Multi-term generation
+        let ans = nums[0];
+        let text = nums[0].toString();
+        for(let i=1; i<nums.length; i++) {
+            let op = conf.op === 'mix' ? ['+','-','*'][Math.floor(Math.random()*3)] : (conf.op === 'add' ? '+' : (conf.op === 'sub' ? '-' : '*'));
+            if(op === '+') { ans += nums[i]; text += ` + ${nums[i]}`; }
+            else if(op === '-') { 
+                if(ans < nums[i]) { text = `${nums[i]} - (${text})`; ans = nums[i] - ans; } 
+                else { text += ` - ${nums[i]}`; ans -= nums[i]; }
+            }
+            else { ans *= nums[i]; text = `(${text}) × ${nums[i]}`; }
+        }
+        return { text, ans, rem: 0 };
     }
 
-    function renderQuestion() {
-        let q = game.questions[game.currentIndex];
-        document.getElementById('question-box').innerText = q.text + " = ?";
-        document.getElementById('ans-q').value = '';
-        document.getElementById('ans-r').value = '';
-        document.getElementById('progress').innerText = `${game.currentIndex + 1}/${game.questions.length}`;
-        document.getElementById('skipped-num').innerText = game.skipped.length;
-        document.getElementById('ans-q').focus();
+    function render() {
+        let q = game.pool[game.index];
+        document.getElementById('question-area').innerText = q.text + " = ?";
+        document.getElementById('ans-main').value = '';
+        document.getElementById('ans-rem').value = '';
+        document.getElementById('info-skipped').innerText = game.skipped.length;
+        document.getElementById('stat-progress').innerText = conf.mode === 'free' ? 'FREE PLAY' : `PROGRESS: ${game.index + 1}/${game.pool.length}`;
+        document.getElementById('ans-main').focus();
     }
 
     function checkAnswer() {
-        let q = game.questions[game.currentIndex];
-        let userAns = parseInt(document.getElementById('ans-q').value);
-        let userRem = parseInt(document.getElementById('ans-r').value) || 0;
+        let q = game.pool[game.index];
+        let uA = parseInt(document.getElementById('ans-main').value);
+        let uR = parseInt(document.getElementById('ans-rem').value) || 0;
 
-        if(userAns === q.ans && (config.type !== 'div' || userRem === q.rem)) {
-            nextStep();
+        if(uA === q.ans && (conf.op !== 'div' || uR === q.rem)) {
+            next();
         } else {
-            alert("再想一下喔！");
+            alert("Incorrect. Keep trying!");
         }
     }
 
     function skipQuestion() {
-        // 把目前的題目丟進 skipped 陣列
-        game.skipped.push(game.questions[game.currentIndex]);
-        nextStep();
+        game.skipped.push(game.pool[game.index]);
+        next();
     }
 
-    function nextStep() {
-        game.currentIndex++;
-        if(game.currentIndex >= game.questions.length) {
+    function next() {
+        game.index++;
+        if(game.index >= game.pool.length) {
             if(game.skipped.length > 0) {
-                // 如果有跳過的題目，把 skipped 轉成新的 questions 繼續做
-                game.questions = [...game.skipped];
+                game.pool = [...game.skipped];
                 game.skipped = [];
-                game.currentIndex = 0;
-                alert("現在開始補做刚才跳過的題目！");
-                renderQuestion();
+                game.index = 0;
+                alert("Redoing skipped questions now!");
+                render();
             } else {
-                finishGame();
+                endGame();
             }
         } else {
-            renderQuestion();
+            render();
         }
     }
 
-    function finishGame() {
-        game.isFinished = true;
-        clearInterval(game.timerId);
-        let timeUsed = document.getElementById('timer').innerText;
-        alert(`恭喜完成！總耗時：${timeUsed}`);
-        showScreen('screen-menu');
-    }
-
-    function startTimer() {
-        clearInterval(game.timerId);
-        game.timerId = setInterval(() => {
-            let now = Date.now();
-            let diff = Math.floor((now - game.startTime) / 1000);
-            let m = Math.floor(diff / 60).toString().padStart(2, '0');
-            let s = (diff % 60).toString().padStart(2, '0');
-            document.getElementById('timer').innerText = `${m}:${s}`;
+    function startClock() {
+        clearInterval(game.timer);
+        game.timer = setInterval(() => {
+            let elapsed = Math.floor((Date.now() - game.startTime) / 1000);
+            if(conf.mode === 'timed') {
+                let remaining = conf.timeLimit - elapsed;
+                if(remaining <= 0) { endGame(); return; }
+                document.getElementById('info-timer').innerText = `REMAINING: ${remaining}s`;
+            } else {
+                document.getElementById('info-timer').innerText = `TIME: ${elapsed}s`;
+            }
         }, 1000);
     }
 
-    // 全鍵盤操作
+    function endGame() {
+        clearInterval(game.timer);
+        alert("Challenge Complete!");
+        showScreen('screen-menu');
+    }
+
+    // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
         if(e.key === 'Enter') checkAnswer();
         if(e.key === 'ArrowDown') skipQuestion();
-        if(e.key === 'ArrowRight' && config.type === 'div') document.getElementById('ans-r').focus();
-        if(e.key === 'ArrowLeft') document.getElementById('ans-q').focus();
+        if(e.key === 'ArrowRight' && conf.op === 'div') document.getElementById('ans-rem').focus();
+        if(e.key === 'ArrowLeft') document.getElementById('ans-main').focus();
     });
 </script>
 

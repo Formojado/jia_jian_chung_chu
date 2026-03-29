@@ -3,319 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Matrix Pro | Ultimate Edition</title>
+    <title>Math Matrix Pro | Ultimate</title>
     <style>
         :root {
-            --bg: #1e293b;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --green: #22c55e;
-            --orange: #f97316;
-            --red: #ef4444;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --primary: #10b981; /* Green */
+            --secondary: #f97316; /* Orange */
             --text: #f8fafc;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         #app {
             width: 95vw;
-            max-width: 1000px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 1100px;
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 50px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .screen { display: none; }
-        .active { display: block; animation: fadeIn 0.3s ease; }
+        .active { display: block; animation: screenIn 0.5s ease-out; }
 
-        h1 { font-size: 3.5rem; margin-bottom: 30px; letter-spacing: -1px; }
-
-        /* Buttons */
-        .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        .btn {
-            padding: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
+        /* Symbols & Buttons */
+        .symbol-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px; }
+        .op-btn {
+            aspect-ratio: 1;
+            font-size: 4rem;
+            background: var(--primary);
             border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
+            border-radius: 24px;
             color: white;
-            background: var(--green);
+            cursor: pointer;
+            transition: var(--transition);
         }
-        .btn-orange { background: var(--orange); }
-        .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
-        .btn-red { background: var(--red); }
-        .btn:hover, .btn.selected { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .op-btn:hover { transform: translateY(-8px); filter: brightness(1.1); box-shadow: 0 15px 30px rgba(16, 185, 129, 0.3); }
+        .op-btn.mixed { background: var(--secondary); font-size: 3rem; }
+
+        /* Sliders */
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; height: 12px;
+            background: #334155; border-radius: 10px; outline: none; accent-color: var(--primary);
+            cursor: pointer; transition: var(--transition);
+        }
+
+        .setting-card { background: rgba(0,0,0,0.2); padding: 25px; border-radius: 20px; margin-bottom: 20px; text-align: left; }
+        .setting-card label { display: flex; justify-content: space-between; font-size: 1.4rem; margin-bottom: 15px; color: #94a3b8; }
+        .setting-card span { color: var(--primary); font-weight: bold; font-size: 1.8rem; }
 
         /* Game UI */
-        #question-area {
-            font-size: clamp(2rem, 8vw, 5rem);
-            margin: 50px 0;
+        #question-container {
+            font-size: clamp(2.5rem, 10vw, 6rem);
+            margin: 60px 0;
             font-weight: 800;
-            word-wrap: break-word;
+            min-height: 1.2em;
+            transition: var(--transition);
         }
+        .q-animate { animation: qPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        .input-group { display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .input-wrap { display: flex; justify-content: center; align-items: center; gap: 20px; }
         input[type=number] {
-            background: #f1f5f9;
-            border: none;
-            border-radius: 12px;
-            color: #1e293b;
-            font-size: 3rem;
-            width: 250px;
-            padding: 15px;
-            text-align: center;
-            outline: none;
-        }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-        .status-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 15px; 
-            background: rgba(0,0,0,0.2); 
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            font-size: 1.1rem;
+            background: #f8fafc; border: none; border-radius: 20px; color: var(--bg);
+            font-size: 4rem; width: 300px; padding: 20px; text-align: center; outline: none;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        .setting-row { margin: 20px 0; text-align: left; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; }
-        label { display: block; margin-bottom: 10px; color: #94a3b8; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .btn-action {
+            padding: 20px 40px; font-size: 1.5rem; font-weight: 700; border-radius: 18px;
+            border: none; cursor: pointer; transition: var(--transition);
+        }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-skip { background: transparent; border: 2px solid #ef4444; color: #ef4444; }
+
+        .status-top { display: flex; justify-content: space-between; font-family: monospace; font-size: 1.4rem; color: #94a3b8; margin-bottom: 30px; }
+
+        @keyframes screenIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes qPop { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="screen-menu" class="screen active">
-        <h1>MATH MATRIX</h1>
-        <div class="btn-grid">
-            <button class="btn nav-item" onclick="setOp('add')">ADDITION (+)</button>
-            <button class="btn nav-item" onclick="setOp('sub')">SUBTRACTION (−)</button>
-            <button class="btn nav-item" onclick="setOp('mul')">MULTIPLICATION (×)</button>
-            <button class="btn nav-item" onclick="setOp('div')">DIVISION (÷)</button>
-            <button class="btn btn-orange nav-item" onclick="setOp('mix')">MIXED MODE</button>
-            <button class="btn nav-item" style="grid-column: 1/-1" onclick="initGame('free')">NO LIMITS (FREE PLAY)</button>
+        <h1 style="font-size: 3rem; margin-bottom: 50px;">MATH MATRIX</h1>
+        <div class="symbol-grid">
+            <button class="op-btn" onclick="setOp('add')">+</button>
+            <button class="op-btn" onclick="setOp('sub')">−</button>
+            <button class="op-btn" onclick="setOp('mul')">×</button>
+            <button class="op-btn" onclick="setOp('div')">÷</button>
+            <button class="op-btn mixed" onclick="setOp('mix')">MIX</button>
         </div>
     </div>
 
     <div id="screen-setup" class="screen">
-        <h2 id="setup-title">CHALLENGE CONFIG</h2>
+        <h2 id="setup-title" style="font-size: 2.5rem;">SETTINGS</h2>
         
-        <div class="setting-row">
+        <div class="setting-card">
             <label>Digits: <span id="val-digits">1</span></label>
-            <input type="range" min="1" max="8" value="1" style="width:100%" oninput="updateSetting('digits', this.value)">
+            <input type="range" min="1" max="8" value="1" oninput="upd('digits', this.value)">
         </div>
         
-        <div class="setting-row">
-            <label>Terms (Numbers per question): <span id="val-terms">2</span></label>
-            <input type="range" min="2" max="8" value="2" style="width:100%" oninput="updateSetting('terms', this.value)">
+        <div class="setting-card">
+            <label>Terms: <span id="val-terms">2</span></label>
+            <input type="range" min="2" max="8" value="2" oninput="upd('terms', this.value)">
         </div>
 
-        <div id="custom-inputs" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <div style="flex:1">
-                <label>Sprint Goal (Questions)</label>
-                <input type="number" id="custom-sprint" value="10" style="width:100%; font-size: 1.5rem; border-radius: 8px;">
-            </div>
-            <div style="flex:1">
-                <label>Timed Limit (Seconds)</label>
-                <input type="number" id="custom-timed" value="60" style="width:100%; font-size: 1.5rem; border-radius: 8px;">
-            </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 30px;">
+            <button class="btn-action btn-confirm" onclick="init('sprint')">SPRINT</button>
+            <button class="btn-action btn-confirm" onclick="init('timed')">TIMED</button>
+            <button class="btn-action btn-confirm" style="background:#6366f1" onclick="init('unlimited')">♾️ FREE</button>
         </div>
-
-        <div class="btn-grid">
-            <button class="btn nav-item" onclick="initGame('sprint')">START SPRINT</button>
-            <button class="btn nav-item" onclick="initGame('timed')">START TIMED</button>
-            <button class="btn btn-red nav-item" onclick="showScreen('screen-menu')">BACK</button>
-        </div>
+        <button class="btn-action btn-skip" style="width:100%; margin-top: 15px;" onclick="show('screen-menu')">BACK</button>
     </div>
 
     <div id="screen-game" class="screen">
-        <div class="status-bar">
-            <span>MODE: <span id="info-mode">--</span></span>
-            <span id="stat-progress">PROGRESS: 0/0</span>
-            <span style="color:var(--red)">SKIPPED: <span id="info-skipped">0</span></span>
+        <div class="status-top">
+            <span id="info-mode">MODE</span>
             <span id="info-timer">00:00</span>
+            <span id="info-progress">0/0</span>
         </div>
         
-        <div id="question-area">QUESTION</div>
+        <div id="question-container">QUESTION</div>
 
-        <div class="input-group">
-            <input type="number" id="ans-main" class="nav-item" placeholder="Ans">
-            <div id="rem-box" style="display:none">
-                <span style="font-size: 2rem;">REM</span>
-                <input type="number" id="ans-rem" class="nav-item" placeholder="Rem">
+        <div class="input-wrap">
+            <input type="number" id="ans-main" placeholder="?">
+            <div id="rem-wrap" style="display:none">
+                <span style="font-size: 2rem; color: var(--primary);">R</span>
+                <input type="number" id="ans-rem" style="width:150px" placeholder="Rem">
             </div>
         </div>
 
-        <div class="btn-grid" style="margin-top: 50px;">
-            <button class="btn nav-item" onclick="checkAnswer()">CONFIRM (Enter)</button>
-            <button class="btn btn-outline nav-item" onclick="skipQuestion()">SKIP (ArrowDown)</button>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 60px;">
+            <button class="btn-action btn-confirm" onclick="check()">CONFIRM (Enter)</button>
+            <button class="btn-action btn-skip" onclick="skip()">SKIP (↓)</button>
         </div>
     </div>
 </div>
 
 <script>
-    let conf = { op: '', digits: 1, terms: 2, mode: '', goal: 10, timeLimit: 60 };
-    let game = {
-        pool: [],
-        skipped: [],
-        index: 0,
-        startTime: 0,
-        timer: null
-    };
+    let conf = { op: '', digits: 1, terms: 2, mode: '' };
+    let game = { pool: [], skipped: [], idx: 0, timer: null, start: 0 };
 
-    function showScreen(id) {
+    const show = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-    }
+    };
 
-    function setOp(op) {
-        conf.op = op;
-        document.getElementById('setup-title').innerText = `${op.toUpperCase()} SETTINGS`;
-        showScreen('screen-setup');
-    }
+    const upd = (k, v) => { conf[k] = parseInt(v); document.getElementById(`val-${k}`).innerText = v; };
 
-    function updateSetting(key, val) {
-        conf[key] = parseInt(val);
-        document.getElementById(`val-${key}`).innerText = val;
-    }
+    function setOp(op) { conf.op = op; document.getElementById('setup-title').innerText = `${op.toUpperCase()} SETTINGS`; show('screen-setup'); }
 
-    function initGame(mode) {
+    function init(mode) {
         conf.mode = mode;
-        conf.goal = parseInt(document.getElementById('custom-sprint').value) || 10;
-        conf.timeLimit = parseInt(document.getElementById('custom-timed').value) || 60;
+        game = { pool: [], skipped: [], idx: 0, start: Date.now() };
+        let count = mode === 'unlimited' ? 9999 : 10;
+        for(let i=0; i<count; i++) game.pool.push(genMath());
         
-        game = { pool: [], skipped: [], index: 0, startTime: Date.now() };
-        
-        // Prep questions
-        let count = mode === 'free' ? 999 : conf.goal;
-        for(let i=0; i<count; i++) game.pool.push(generateMath());
-
         document.getElementById('info-mode').innerText = conf.op.toUpperCase();
-        document.getElementById('rem-box').style.display = conf.op === 'div' ? 'flex' : 'none';
-        
-        showScreen('screen-game');
+        document.getElementById('rem-wrap').style.display = conf.op === 'div' ? 'flex' : 'none';
+        show('screen-game');
         render();
-        startClock();
+        clock();
     }
 
-    function generateMath() {
+    function genMath() {
         let nums = [];
         for(let i=0; i<conf.terms; i++) {
-            let max = Math.pow(10, conf.digits) - 1;
-            let min = Math.pow(10, conf.digits - 1);
-            nums.push(Math.floor(Math.random() * (max - min + 1)) + min);
+            let m = Math.pow(10, conf.digits);
+            nums.push(Math.floor(Math.random() * (m - m/10)) + m/10);
         }
 
         if(conf.op === 'div') {
-            let a = nums[0]; // Dividend locked to digits
-            let b = Math.floor(Math.random() * 98) + 2; // Divisor stays 1-2 digits for sanity
-            return { text: `${a} ÷ ${b}`, ans: Math.floor(a/b), rem: a%b };
+            let b = Math.floor(Math.random() * 98) + 2;
+            return { text: `${nums[0]} ÷ ${b}`, ans: Math.floor(nums[0]/b), rem: nums[0]%b };
         }
 
-        // Multi-term generation
-        let ans = nums[0];
-        let text = nums[0].toString();
+        let res = nums[0], txt = nums[0].toString();
         for(let i=1; i<nums.length; i++) {
-            let op = conf.op === 'mix' ? ['+','-','*'][Math.floor(Math.random()*3)] : (conf.op === 'add' ? '+' : (conf.op === 'sub' ? '-' : '*'));
-            if(op === '+') { ans += nums[i]; text += ` + ${nums[i]}`; }
+            let op = conf.op === 'mix' ? ['+','-','*'][Math.floor(Math.random()*3)] : (conf.op==='add'?'+':(conf.op==='sub'?'-':'*'));
+            if(op === '+') { res += nums[i]; txt += ` + ${nums[i]}`; }
             else if(op === '-') { 
-                if(ans < nums[i]) { text = `${nums[i]} - (${text})`; ans = nums[i] - ans; } 
-                else { text += ` - ${nums[i]}`; ans -= nums[i]; }
+                if(res < nums[i]) { txt = `${nums[i]} - (${txt})`; res = nums[i] - res; }
+                else { txt += ` - ${nums[i]}`; res -= nums[i]; }
+            } else {
+                // If previous part was + or -, add parentheses to preserve math
+                if(txt.includes('+') || txt.includes('-')) txt = `(${txt})`;
+                res *= nums[i]; txt += ` × ${nums[i]}`;
             }
-            else { ans *= nums[i]; text = `(${text}) × ${nums[i]}`; }
         }
-        return { text, ans, rem: 0 };
+        return { text: txt, ans: res, rem: 0 };
     }
 
     function render() {
-        let q = game.pool[game.index];
-        document.getElementById('question-area').innerText = q.text + " = ?";
+        const container = document.getElementById('question-container');
+        container.classList.remove('q-animate');
+        void container.offsetWidth; // Trigger reflow
+        container.classList.add('q-animate');
+
+        let q = game.pool[game.idx];
+        container.innerText = q.text;
         document.getElementById('ans-main').value = '';
         document.getElementById('ans-rem').value = '';
-        document.getElementById('info-skipped').innerText = game.skipped.length;
-        document.getElementById('stat-progress').innerText = conf.mode === 'free' ? 'FREE PLAY' : `PROGRESS: ${game.index + 1}/${game.pool.length}`;
+        document.getElementById('info-progress').innerText = conf.mode === 'unlimited' ? '♾️' : `${game.idx + 1}/${game.pool.length}`;
         document.getElementById('ans-main').focus();
     }
 
-    function checkAnswer() {
-        let q = game.pool[game.index];
-        let uA = parseInt(document.getElementById('ans-main').value);
-        let uR = parseInt(document.getElementById('ans-rem').value) || 0;
-
-        if(uA === q.ans && (conf.op !== 'div' || uR === q.rem)) {
-            next();
-        } else {
-            alert("Incorrect. Keep trying!");
-        }
+    function check() {
+        let q = game.pool[game.idx];
+        let a = parseInt(document.getElementById('ans-main').value);
+        let r = parseInt(document.getElementById('ans-rem').value) || 0;
+        if(a === q.ans && (conf.op !== 'div' || r === q.rem)) next();
+        else { document.getElementById('ans-main').style.border = '2px solid red'; setTimeout(()=>document.getElementById('ans-main').style.border='none',500); }
     }
 
-    function skipQuestion() {
-        game.skipped.push(game.pool[game.index]);
-        next();
-    }
+    function skip() { game.skipped.push(game.pool[game.idx]); next(); }
 
     function next() {
-        game.index++;
-        if(game.index >= game.pool.length) {
-            if(game.skipped.length > 0) {
-                game.pool = [...game.skipped];
-                game.skipped = [];
-                game.index = 0;
-                alert("Redoing skipped questions now!");
-                render();
-            } else {
-                endGame();
-            }
-        } else {
-            render();
-        }
+        game.idx++;
+        if(game.idx >= game.pool.length) {
+            if(game.skipped.length > 0) { game.pool = [...game.skipped]; game.skipped = []; game.idx = 0; render(); }
+            else { clearInterval(game.timer); alert("Done!"); show('screen-menu'); }
+        } else render();
     }
 
-    function startClock() {
+    function clock() {
         clearInterval(game.timer);
         game.timer = setInterval(() => {
-            let elapsed = Math.floor((Date.now() - game.startTime) / 1000);
-            if(conf.mode === 'timed') {
-                let remaining = conf.timeLimit - elapsed;
-                if(remaining <= 0) { endGame(); return; }
-                document.getElementById('info-timer').innerText = `REMAINING: ${remaining}s`;
-            } else {
-                document.getElementById('info-timer').innerText = `TIME: ${elapsed}s`;
-            }
+            let sec = Math.floor((Date.now() - game.start) / 1000);
+            document.getElementById('info-timer').innerText = `${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
         }, 1000);
     }
 
-    function endGame() {
-        clearInterval(game.timer);
-        alert("Challenge Complete!");
-        showScreen('screen-menu');
-    }
-
-    // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') checkAnswer();
-        if(e.key === 'ArrowDown') skipQuestion();
+        if(e.key === 'Enter') check();
+        if(e.key === 'ArrowDown') skip();
         if(e.key === 'ArrowRight' && conf.op === 'div') document.getElementById('ans-rem').focus();
         if(e.key === 'ArrowLeft') document.getElementById('ans-main').focus();
     });
 </script>
-
 </body>
 </html>

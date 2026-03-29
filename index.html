@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Matrix Elite - Pro v3</title>
+    <title>Math Matrix Elite - Pure</title>
     <style>
         :root {
             --bg: #0f172a;
@@ -37,7 +37,6 @@
             text-align: center;
         }
 
-        /* --- 核心動畫 --- */
         .screen { display: none; }
         .active { display: block; animation: slideIn 0.3s ease-out; }
 
@@ -47,8 +46,8 @@
         }
 
         @keyframes errorFlash {
-            0% { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
+            0% { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
             100% { border-color: transparent; background: #f8fafc; transform: translateX(0); }
         }
 
@@ -59,12 +58,11 @@
         }
 
         .ans-error { animation: errorFlash 0.2s ease-in-out !important; }
-        .success-glow { animation: successPop 0.3s ease-out; }
-        .q-fade { animation: fadeIn 0.15s ease-out; }
+        .success-glow { animation: successPop 0.2s ease-out; }
+        .q-fade { animation: fadeIn 0.1s ease-out; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- UI 元件 --- */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -99,7 +97,7 @@
         input#ans-main, input#ans-rem {
             background: #f8fafc; border: 4px solid transparent; border-radius: 20px; 
             color: var(--bg); font-size: 4rem; width: 350px; padding: 25px; 
-            text-align: center; outline: none; transition: border 0.1s;
+            text-align: center; outline: none;
         }
         input#ans-rem { width: 180px; background: #cbd5e1; }
 
@@ -110,7 +108,7 @@
         .btn-confirm { background: var(--primary); color: white; width: 100%; }
         .btn-skip { background: transparent; border: 3px solid var(--danger); color: var(--danger); width: 100%; }
 
-        .status-top { display: flex; justify-content: space-between; font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .status-top { display: flex; justify-content: space-between; font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; font-family: monospace; font-weight: bold; }
         #info-mode { color: var(--secondary); text-transform: uppercase; }
     </style>
 </head>
@@ -160,7 +158,7 @@
 
     <div id="screen-game" class="screen">
         <div class="status-top">
-            <span id="info-mode">模式載入中...</span>
+            <span id="info-mode">MODE</span>
             <span id="info-timer">00:00</span>
             <span id="info-progress">0/0</span>
         </div>
@@ -179,7 +177,6 @@
 <script>
     let conf = { op: '', digits: 1, terms: 2, mode: '' };
     let game = { pool: [], idx: 0, timer: null, start: 0 };
-
     const opMap = { add: '+', sub: '−', mul: '×', div: '÷', mix: 'MIX' };
 
     const show = (id) => {
@@ -200,10 +197,7 @@
         game = { pool: [], idx: 0, start: Date.now() };
         let count = (mode === 'unlimited') ? 999 : parseInt(document.getElementById('cfg-sprint').value);
         for(let i=0; i<count; i++) game.pool.push(genMath());
-        
-        // 更新左上角的模式文字
         document.getElementById('info-mode').innerText = `${conf.mode} (${opMap[conf.op]})`;
-        
         document.getElementById('ans-rem').style.display = (conf.op === 'div') ? 'block' : 'none';
         show('screen-game');
         render();
@@ -226,32 +220,40 @@
 
         let nums = [];
         for(let i=0; i<conf.terms; i++) nums.push(getNum(conf.digits));
-        let res = nums[0], txt = nums[0].toString();
+        
+        let res = nums[0], txtArr = [nums[0]];
 
         for(let i=1; i<nums.length; i++) {
             let ops = ['+', '-', '×'];
             if (conf.op === 'mix') ops.push('÷');
-            let currentOp = conf.op === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : (conf.op==='add'?'+':(conf.op==='sub'?'-':'×'));
+            let curOp = conf.op === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : (conf.op==='add'?'+':(conf.op==='sub'?'-':'×'));
             
-            if(currentOp === '+') { res += nums[i]; txt += ` + ${nums[i]}`; }
-            else if(currentOp === '-') { 
-                if(res < nums[i]) { txt = `${nums[i]} - (${txt})`; res = nums[i] - res; }
-                else { txt += ` - ${nums[i]}`; res -= nums[i]; }
+            if(curOp === '+') { res += nums[i]; txtArr.push('+', nums[i]); }
+            else if(curOp === '-') { 
+                if(res < nums[i]) { 
+                    // 不夠減時直接交換順序，不加括號
+                    let oldRes = res;
+                    res = nums[i] - oldRes;
+                    txtArr = [nums[i], '-', ...txtArr]; 
+                } else {
+                    res -= nums[i];
+                    txtArr.push('-', nums[i]);
+                }
             } 
-            else if(currentOp === '×') {
-                if(txt.includes('+') || txt.includes('-')) txt = `(${txt})`;
-                res *= nums[i]; txt += ` × ${nums[i]}`;
+            else if(curOp === '×') {
+                res *= nums[i];
+                txtArr.push('×', nums[i]);
             }
-            else if(currentOp === '÷') {
+            else if(curOp === '÷') {
                 let divisor = Math.floor(Math.random() * 11) + 2; 
                 let adjustment = res % divisor;
                 res = res - adjustment;
                 if (res <= 0) res = divisor * 2;
-                txt = `(${res} ÷ ${divisor})`; 
+                txtArr = [res, '÷', divisor]; // 混合題除法保持簡單整除
                 res = res / divisor;
             }
         }
-        return { text: txt, ans: res, rem: 0 };
+        return { text: txtArr.join(' '), ans: res, rem: 0 };
     }
 
     function render() {
@@ -284,9 +286,8 @@
     function check() {
         const q = game.pool[game.idx];
         const mainInput = document.getElementById('ans-main');
-        const remInput = document.getElementById('ans-rem');
         const a = parseInt(mainInput.value);
-        const r = parseInt(remInput.value) || 0;
+        const r = parseInt(document.getElementById('ans-rem').value) || 0;
         const qText = document.getElementById('q-text');
 
         if(a === q.ans && (conf.op !== 'div' || r === q.rem)) {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +17,7 @@
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -39,6 +39,7 @@
         .screen { display: none; }
         .active { display: block; animation: fadeIn 0.3s ease; }
 
+        /* 移除所有輸入框的上下調整鈕 */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -56,6 +57,7 @@
         .setting-card label { display: flex; justify-content: space-between; font-size: 1.8rem; margin-bottom: 20px; color: #94a3b8; }
         .setting-card span { color: var(--primary); font-weight: bold; font-size: 2rem; }
 
+        /* 巨大滑桿 */
         input[type=range] {
             -webkit-appearance: none; width: 100%; height: 28px; 
             background: #334155; border-radius: 14px; outline: none; accent-color: var(--primary);
@@ -68,7 +70,6 @@
             padding: 15px; font-size: 1.5rem; border-radius: 15px; text-align: center; width: 100%;
         }
 
-        /* 題目顯示區域：固定高度，內層文字絕對不換行 */
         #q-wrap {
             width: 100%;
             height: 140px; 
@@ -78,11 +79,7 @@
             align-items: center;
             overflow: hidden;
         }
-        #q-text {
-            font-weight: 900;
-            white-space: nowrap;
-            /* 移除了 transition，確保瞬間呈現 */
-        }
+        #q-text { font-weight: 900; white-space: nowrap; }
 
         .input-wrap { display: flex; justify-content: center; align-items: center; gap: 20px; }
         input#ans-main, input#ans-rem {
@@ -119,7 +116,7 @@
     </div>
 
     <div id="screen-setup" class="screen">
-        <h2 id="setup-title" style="font-size: 3rem; margin-top: 0;">SETTINGS</h2>
+        <h2 style="font-size: 3rem; margin-top: 0;">SETTINGS</h2>
         <div class="setting-card">
             <label>Digits: <span id="val-digits">1</span></label>
             <input type="range" min="1" max="8" value="1" oninput="upd('digits', this.value)">
@@ -154,11 +151,7 @@
             <span id="info-timer">00:00</span>
             <span id="info-progress">0/0</span>
         </div>
-        
-        <div id="q-wrap">
-            <span id="q-text">---</span>
-        </div>
-
+        <div id="q-wrap"><span id="q-text">---</span></div>
         <div class="input-wrap">
             <input type="number" id="ans-main" placeholder="?">
             <input type="number" id="ans-rem" style="display:none" placeholder="R">
@@ -203,59 +196,62 @@
     }
 
     function genMath() {
-        const getNum = (d) => {
+        const getNum = (maxD) => {
+            // 確保位數差距不超過 3 位
+            let minD = Math.max(1, maxD - 2); 
+            let d = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
             let max = Math.pow(10, d), min = Math.pow(10, d-1);
             return Math.floor(Math.random() * (max - min)) + min;
         };
 
+        // 純除法模式：可能會有餘數
         if(conf.op === 'div') {
             let a = getNum(conf.digits);
-            let b = Math.floor(Math.random() * 98) + 2; 
+            let b = Math.floor(Math.random() * 89) + 2; 
             return { text: `${a} ÷ ${b}`, ans: Math.floor(a/b), rem: a%b };
         }
 
         let nums = [];
-        for(let i=0; i<conf.terms; i++) {
-            let d = (conf.op === 'mix') ? (Math.floor(Math.random() * conf.digits) + 1) : conf.digits;
-            nums.push(getNum(d));
-        }
+        for(let i=0; i<conf.terms; i++) nums.push(getNum(conf.digits));
 
         let res = nums[0], txt = nums[0].toString();
         for(let i=1; i<nums.length; i++) {
-            let op = conf.op === 'mix' ? ['+','-','*'][Math.floor(Math.random()*3)] : (conf.op==='add'?'+':(conf.op==='sub'?'-':'*'));
-            if(op === '+') { res += nums[i]; txt += ` + ${nums[i]}`; }
-            else if(op === '-') { 
+            let ops = ['+', '-', '×'];
+            if (conf.op === 'mix') ops.push('÷'); // 混合題加入除法
+
+            let currentOp = conf.op === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : (conf.op==='add'?'+':(conf.op==='sub'?'-':'×'));
+            
+            if(currentOp === '+') { res += nums[i]; txt += ` + ${nums[i]}`; }
+            else if(currentOp === '-') { 
                 if(res < nums[i]) { txt = `${nums[i]} - (${txt})`; res = nums[i] - res; }
                 else { txt += ` - ${nums[i]}`; res -= nums[i]; }
-            } else {
+            } 
+            else if(currentOp === '×') {
                 if(txt.includes('+') || txt.includes('-')) txt = `(${txt})`;
                 res *= nums[i]; txt += ` × ${nums[i]}`;
+            }
+            else if(currentOp === '÷') {
+                // 混合題中的除法：確保可以整除且除數不為 0/1
+                let divisor = Math.floor(Math.random() * 11) + 2; 
+                // 為了保證整除，我們直接修改當前的結果，讓它變成 divisor 的倍數
+                let adjustment = res % divisor;
+                res = res - adjustment;
+                if (res === 0) res = divisor * 2; // 防止出現 0
+                txt = `(${res} ÷ ${divisor})`; 
+                res = res / divisor;
             }
         }
         return { text: txt, ans: res, rem: 0 };
     }
 
-    // 核心數學比例測量引擎
     function getPerfectFontSize(text, containerWidth) {
-        // 1. 建立隱形的尺
         let ruler = document.createElement('span');
-        ruler.style.visibility = 'hidden';
-        ruler.style.position = 'absolute';
-        ruler.style.whiteSpace = 'nowrap';
-        ruler.style.fontWeight = '900';
-        ruler.style.fontFamily = "'Inter', sans-serif";
-        ruler.style.fontSize = '100px'; // 基準大小
+        ruler.style.cssText = "visibility:hidden; position:absolute; white-space:nowrap; font-weight:900; font-family:'Inter',sans-serif; font-size:100px;";
         ruler.innerText = text;
         document.body.appendChild(ruler);
-
-        // 2. 取得在 100px 時的精確寬度
         let textWidth = ruler.offsetWidth;
         document.body.removeChild(ruler);
-
-        // 3. 計算比例 (留下 5% 的安全邊距)
         let ratio = (containerWidth * 0.95) / textWidth;
-        
-        // 4. 回傳最終大小，最大不超過 120px
         return Math.min(100 * ratio, 120);
     }
 
@@ -263,28 +259,13 @@
         const wrap = document.getElementById('q-wrap');
         const qText = document.getElementById('q-text');
         let q = game.pool[game.idx];
-        
-        // 計算完 -> 設定大小 -> 塞入文字 (完全不會有縮放動畫)
-        let finalSize = getPerfectFontSize(q.text, wrap.clientWidth);
-        qText.style.fontSize = Math.floor(finalSize) + 'px';
+        qText.style.fontSize = Math.floor(getPerfectFontSize(q.text, wrap.clientWidth)) + 'px';
         qText.innerText = q.text;
-        
         document.getElementById('ans-main').value = '';
         document.getElementById('ans-rem').value = '';
         document.getElementById('info-progress').innerText = (conf.mode === 'unlimited') ? '♾️' : `${game.idx + 1}/${game.pool.length}`;
         document.getElementById('ans-main').focus();
     }
-
-    // 視窗大小改變時，瞬間重算
-    window.addEventListener('resize', () => {
-        if(document.getElementById('screen-game').classList.contains('active')) {
-            const wrap = document.getElementById('q-wrap');
-            const qText = document.getElementById('q-text');
-            let q = game.pool[game.idx];
-            let finalSize = getPerfectFontSize(q.text, wrap.clientWidth);
-            qText.style.fontSize = Math.floor(finalSize) + 'px';
-        }
-    });
 
     function check() {
         let q = game.pool[game.idx];
@@ -294,7 +275,6 @@
     }
 
     function skip() { game.skipped.push(game.pool[game.idx]); next(); }
-
     function next() {
         game.idx++;
         if(game.idx >= game.pool.length) {
@@ -317,13 +297,18 @@
         }, 1000);
     }
 
-    function endGame() { clearInterval(game.timer); alert("Finished!"); show('screen-menu'); }
+    function endGame() { clearInterval(game.timer); alert("測驗結束！"); show('screen-menu'); }
 
+    // 攔截上下鍵，取消所有調整功能
     document.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
         if(e.key === 'Enter') check();
-        if(e.key === 'ArrowDown') skip();
         if(e.key === 'ArrowRight' && conf.op === 'div') document.getElementById('ans-rem').focus();
         if(e.key === 'ArrowLeft') document.getElementById('ans-main').focus();
+    });
+
+    window.addEventListener('resize', () => {
+        if(document.getElementById('screen-game').classList.contains('active')) render();
     });
 </script>
 </body>

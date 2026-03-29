@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Matrix Elite</title>
+    <title>Math Matrix Elite - Cinematic</title>
     <style>
         :root {
             --bg: #0f172a;
             --surface: #1e293b;
             --primary: #10b981;
             --secondary: #f97316;
+            --danger: #ef4444;
             --text: #f8fafc;
         }
 
@@ -34,12 +35,40 @@
             padding: 50px 30px;
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
+            position: relative;
         }
 
+        /* --- 動態系統 --- */
         .screen { display: none; }
-        .active { display: block; animation: fadeIn 0.3s ease; }
+        .active { display: block; animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
-        /* 移除所有輸入框的上下調整鈕 */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(1); color: var(--text); }
+            50% { transform: scale(1.05); color: var(--primary); }
+            100% { transform: scale(1); color: var(--text); }
+        }
+
+        @keyframes quickFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .error-shake { animation: shake 0.3s ease-in-out; border: 4px solid var(--danger) !important; }
+        .success-glow { animation: successPop 0.4s ease-out; }
+        .q-entry { animation: quickFade 0.2s ease-out; }
+
+        /* --- UI 元件 --- */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -48,16 +77,13 @@
         .op-btn {
             aspect-ratio: 1.2; font-size: 5rem; background: var(--primary);
             border: none; border-radius: 30px; color: white; cursor: pointer;
-            transition: 0.2s;
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .op-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
-        .op-btn.mixed { background: var(--secondary); font-size: 3rem; }
+        .op-btn:hover { transform: scale(1.05) translateY(-5px); filter: brightness(1.1); }
 
         .setting-card { background: rgba(0,0,0,0.25); padding: 25px; border-radius: 25px; margin-bottom: 20px; text-align: left; }
         .setting-card label { display: flex; justify-content: space-between; font-size: 1.8rem; margin-bottom: 20px; color: #94a3b8; }
-        .setting-card span { color: var(--primary); font-weight: bold; font-size: 2rem; }
-
-        /* 巨大滑桿 */
+        
         input[type=range] {
             -webkit-appearance: none; width: 100%; height: 28px; 
             background: #334155; border-radius: 14px; outline: none; accent-color: var(--primary);
@@ -70,22 +96,14 @@
             padding: 15px; font-size: 1.5rem; border-radius: 15px; text-align: center; width: 100%;
         }
 
-        #q-wrap {
-            width: 100%;
-            height: 140px; 
-            margin: 30px 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        #q-text { font-weight: 900; white-space: nowrap; }
+        #q-wrap { width: 100%; height: 160px; margin: 20px 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #q-text { font-weight: 900; white-space: nowrap; transition: font-size 0.2s; }
 
         .input-wrap { display: flex; justify-content: center; align-items: center; gap: 20px; }
         input#ans-main, input#ans-rem {
-            background: #f8fafc; border: none; border-radius: 20px; 
+            background: #f8fafc; border: 4px solid transparent; border-radius: 20px; 
             color: var(--bg); font-size: 4rem; width: 350px; padding: 25px; 
-            text-align: center; outline: none;
+            text-align: center; outline: none; transition: 0.3s;
         }
         input#ans-rem { width: 180px; background: #cbd5e1; }
 
@@ -94,35 +112,33 @@
             border: none; cursor: pointer; transition: 0.2s;
         }
         .btn-confirm { background: var(--primary); color: white; width: 100%; }
-        .btn-skip { background: transparent; border: 3px solid #ef4444; color: #ef4444; width: 100%; }
+        .btn-skip { background: transparent; border: 3px solid var(--danger); color: var(--danger); width: 100%; }
 
         .status-top { display: flex; justify-content: space-between; font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; font-family: monospace; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="screen-menu" class="screen active">
-        <h1 style="font-size: 4rem; margin-bottom: 50px;">MATH MATRIX</h1>
+        <h1 style="font-size: 4rem; margin-bottom: 50px; letter-spacing: -2px;">MATH MATRIX</h1>
         <div class="symbol-grid">
             <button class="op-btn" onclick="setOp('add')">+</button>
             <button class="op-btn" onclick="setOp('sub')">−</button>
             <button class="op-btn" onclick="setOp('mul')">×</button>
             <button class="op-btn" onclick="setOp('div')">÷</button>
-            <button class="op-btn mixed" onclick="setOp('mix')">MIX</button>
+            <button class="op-btn" style="background:var(--secondary); font-size:3rem;" onclick="setOp('mix')">MIX</button>
         </div>
     </div>
 
     <div id="screen-setup" class="screen">
-        <h2 style="font-size: 3rem; margin-top: 0;">SETTINGS</h2>
+        <h2 style="font-size: 3rem; margin-top: 0;">CONFIG</h2>
         <div class="setting-card">
-            <label>Digits: <span id="val-digits">1</span></label>
+            <label>Digits: <span id="val-digits" style="color:var(--primary)">1</span></label>
             <input type="range" min="1" max="8" value="1" oninput="upd('digits', this.value)">
         </div>
         <div class="setting-card" id="terms-card">
-            <label>Terms: <span id="val-terms">2</span></label>
+            <label>Terms: <span id="val-terms" style="color:var(--primary)">2</span></label>
             <input type="range" min="2" max="8" value="2" oninput="upd('terms', this.value)">
         </div>
         
@@ -152,7 +168,7 @@
             <span id="info-progress">0/0</span>
         </div>
         <div id="q-wrap"><span id="q-text">---</span></div>
-        <div class="input-wrap">
+        <div class="input-wrap" id="input-container">
             <input type="number" id="ans-main" placeholder="?">
             <input type="number" id="ans-rem" style="display:none" placeholder="R">
         </div>
@@ -169,7 +185,8 @@
 
     const show = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+        const target = document.getElementById(id);
+        target.classList.add('active');
     };
 
     const upd = (k, v) => { conf[k] = parseInt(v); document.getElementById(`val-${k}`).innerText = v; };
@@ -197,14 +214,12 @@
 
     function genMath() {
         const getNum = (maxD) => {
-            // 確保位數差距不超過 3 位
             let minD = Math.max(1, maxD - 2); 
             let d = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
             let max = Math.pow(10, d), min = Math.pow(10, d-1);
             return Math.floor(Math.random() * (max - min)) + min;
         };
 
-        // 純除法模式：可能會有餘數
         if(conf.op === 'div') {
             let a = getNum(conf.digits);
             let b = Math.floor(Math.random() * 89) + 2; 
@@ -213,12 +228,11 @@
 
         let nums = [];
         for(let i=0; i<conf.terms; i++) nums.push(getNum(conf.digits));
-
         let res = nums[0], txt = nums[0].toString();
+
         for(let i=1; i<nums.length; i++) {
             let ops = ['+', '-', '×'];
-            if (conf.op === 'mix') ops.push('÷'); // 混合題加入除法
-
+            if (conf.op === 'mix') ops.push('÷');
             let currentOp = conf.op === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : (conf.op==='add'?'+':(conf.op==='sub'?'-':'×'));
             
             if(currentOp === '+') { res += nums[i]; txt += ` + ${nums[i]}`; }
@@ -231,12 +245,10 @@
                 res *= nums[i]; txt += ` × ${nums[i]}`;
             }
             else if(currentOp === '÷') {
-                // 混合題中的除法：確保可以整除且除數不為 0/1
                 let divisor = Math.floor(Math.random() * 11) + 2; 
-                // 為了保證整除，我們直接修改當前的結果，讓它變成 divisor 的倍數
                 let adjustment = res % divisor;
                 res = res - adjustment;
-                if (res === 0) res = divisor * 2; // 防止出現 0
+                if (res <= 0) res = divisor * 2;
                 txt = `(${res} ÷ ${divisor})`; 
                 res = res / divisor;
             }
@@ -244,23 +256,25 @@
         return { text: txt, ans: res, rem: 0 };
     }
 
-    function getPerfectFontSize(text, containerWidth) {
-        let ruler = document.createElement('span');
-        ruler.style.cssText = "visibility:hidden; position:absolute; white-space:nowrap; font-weight:900; font-family:'Inter',sans-serif; font-size:100px;";
-        ruler.innerText = text;
-        document.body.appendChild(ruler);
-        let textWidth = ruler.offsetWidth;
-        document.body.removeChild(ruler);
-        let ratio = (containerWidth * 0.95) / textWidth;
-        return Math.min(100 * ratio, 120);
-    }
-
     function render() {
         const wrap = document.getElementById('q-wrap');
         const qText = document.getElementById('q-text');
         let q = game.pool[game.idx];
-        qText.style.fontSize = Math.floor(getPerfectFontSize(q.text, wrap.clientWidth)) + 'px';
+        
+        qText.classList.remove('q-entry');
+        void qText.offsetWidth; // 觸發重繪
+        qText.classList.add('q-entry');
+
+        let ruler = document.createElement('span');
+        ruler.style.cssText = "visibility:hidden; position:absolute; white-space:nowrap; font-weight:900; font-family:'Inter',sans-serif; font-size:100px;";
+        ruler.innerText = q.text;
+        document.body.appendChild(ruler);
+        let ratio = (wrap.clientWidth * 0.95) / ruler.offsetWidth;
+        document.body.removeChild(ruler);
+
+        qText.style.fontSize = Math.floor(Math.min(100 * ratio, 120)) + 'px';
         qText.innerText = q.text;
+        
         document.getElementById('ans-main').value = '';
         document.getElementById('ans-rem').value = '';
         document.getElementById('info-progress').innerText = (conf.mode === 'unlimited') ? '♾️' : `${game.idx + 1}/${game.pool.length}`;
@@ -268,18 +282,31 @@
     }
 
     function check() {
-        let q = game.pool[game.idx];
-        let a = parseInt(document.getElementById('ans-main').value);
-        let r = parseInt(document.getElementById('ans-rem').value) || 0;
-        if(a === q.ans && (conf.op !== 'div' || r === q.rem)) next();
+        const q = game.pool[game.idx];
+        const a = parseInt(document.getElementById('ans-main').value);
+        const r = parseInt(document.getElementById('ans-rem').value) || 0;
+        const container = document.getElementById('input-container');
+        const qText = document.getElementById('q-text');
+
+        if(a === q.ans && (conf.op !== 'div' || r === q.rem)) {
+            // 答對動畫
+            qText.classList.add('success-glow');
+            setTimeout(() => {
+                qText.classList.remove('success-glow');
+                next();
+            }, 300);
+        } else {
+            // 答錯動畫
+            container.classList.add('error-shake');
+            setTimeout(() => container.classList.remove('error-shake'), 300);
+        }
     }
 
-    function skip() { game.skipped.push(game.pool[game.idx]); next(); }
+    function skip() { next(); }
     function next() {
         game.idx++;
         if(game.idx >= game.pool.length) {
-            if(game.skipped.length > 0) { game.pool = [...game.skipped]; game.skipped = []; game.idx = 0; render(); }
-            else { endGame(); }
+            alert("FINISHED!"); show('screen-menu');
         } else render();
     }
 
@@ -287,28 +314,15 @@
         clearInterval(game.timer);
         game.timer = setInterval(() => {
             let elapsed = Math.floor((Date.now() - game.start) / 1000);
-            if(conf.mode === 'timed') {
-                let left = game.timeLimit - elapsed;
-                if(left <= 0) endGame();
-                document.getElementById('info-timer').innerText = `-${left}s`;
-            } else {
-                document.getElementById('info-timer').innerText = `${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`;
-            }
+            document.getElementById('info-timer').innerText = `${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`;
         }, 1000);
     }
 
-    function endGame() { clearInterval(game.timer); alert("測驗結束！"); show('screen-menu'); }
-
-    // 攔截上下鍵，取消所有調整功能
     document.addEventListener('keydown', (e) => {
         if(e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
         if(e.key === 'Enter') check();
         if(e.key === 'ArrowRight' && conf.op === 'div') document.getElementById('ans-rem').focus();
         if(e.key === 'ArrowLeft') document.getElementById('ans-main').focus();
-    });
-
-    window.addEventListener('resize', () => {
-        if(document.getElementById('screen-game').classList.contains('active')) render();
     });
 </script>
 </body>

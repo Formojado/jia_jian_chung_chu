@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Matrix Elite - Cinematic</title>
+    <title>Math Matrix Elite - Pro</title>
     <style>
         :root {
             --bg: #0f172a;
@@ -35,22 +35,21 @@
             padding: 50px 30px;
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
-            position: relative;
         }
 
-        /* --- 動態系統 --- */
+        /* --- 核心動畫 --- */
         .screen { display: none; }
-        .active { display: block; animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .active { display: block; animation: slideIn 0.3s ease-out; }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
+        @keyframes errorFlash {
+            0% { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            100% { border-color: transparent; background: #f8fafc; transform: translateX(0); }
         }
 
         @keyframes successPop {
@@ -59,14 +58,12 @@
             100% { transform: scale(1); color: var(--text); }
         }
 
-        @keyframes quickFade {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        /* 狀態類別 */
+        .ans-error { animation: errorFlash 0.2s ease-in-out !important; }
+        .success-glow { animation: successPop 0.3s ease-out; }
+        .q-fade { animation: fadeIn 0.15s ease-out; }
 
-        .error-shake { animation: shake 0.3s ease-in-out; border: 4px solid var(--danger) !important; }
-        .success-glow { animation: successPop 0.4s ease-out; }
-        .q-entry { animation: quickFade 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* --- UI 元件 --- */
         input::-webkit-outer-spin-button,
@@ -77,9 +74,9 @@
         .op-btn {
             aspect-ratio: 1.2; font-size: 5rem; background: var(--primary);
             border: none; border-radius: 30px; color: white; cursor: pointer;
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.15s;
         }
-        .op-btn:hover { transform: scale(1.05) translateY(-5px); filter: brightness(1.1); }
+        .op-btn:hover { transform: scale(1.03); filter: brightness(1.1); }
 
         .setting-card { background: rgba(0,0,0,0.25); padding: 25px; border-radius: 25px; margin-bottom: 20px; text-align: left; }
         .setting-card label { display: flex; justify-content: space-between; font-size: 1.8rem; margin-bottom: 20px; color: #94a3b8; }
@@ -97,13 +94,13 @@
         }
 
         #q-wrap { width: 100%; height: 160px; margin: 20px 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #q-text { font-weight: 900; white-space: nowrap; transition: font-size 0.2s; }
+        #q-text { font-weight: 900; white-space: nowrap; }
 
         .input-wrap { display: flex; justify-content: center; align-items: center; gap: 20px; }
         input#ans-main, input#ans-rem {
             background: #f8fafc; border: 4px solid transparent; border-radius: 20px; 
             color: var(--bg); font-size: 4rem; width: 350px; padding: 25px; 
-            text-align: center; outline: none; transition: 0.3s;
+            text-align: center; outline: none; transition: border 0.1s;
         }
         input#ans-rem { width: 180px; background: #cbd5e1; }
 
@@ -121,7 +118,7 @@
 
 <div id="app">
     <div id="screen-menu" class="screen active">
-        <h1 style="font-size: 4rem; margin-bottom: 50px; letter-spacing: -2px;">MATH MATRIX</h1>
+        <h1 style="font-size: 4rem; margin-bottom: 50px;">MATH MATRIX</h1>
         <div class="symbol-grid">
             <button class="op-btn" onclick="setOp('add')">+</button>
             <button class="op-btn" onclick="setOp('sub')">−</button>
@@ -132,7 +129,7 @@
     </div>
 
     <div id="screen-setup" class="screen">
-        <h2 style="font-size: 3rem; margin-top: 0;">CONFIG</h2>
+        <h2 style="font-size: 3rem; margin-top: 0;">SETTINGS</h2>
         <div class="setting-card">
             <label>Digits: <span id="val-digits" style="color:var(--primary)">1</span></label>
             <input type="range" min="1" max="8" value="1" oninput="upd('digits', this.value)">
@@ -168,7 +165,7 @@
             <span id="info-progress">0/0</span>
         </div>
         <div id="q-wrap"><span id="q-text">---</span></div>
-        <div class="input-wrap" id="input-container">
+        <div class="input-wrap">
             <input type="number" id="ans-main" placeholder="?">
             <input type="number" id="ans-rem" style="display:none" placeholder="R">
         </div>
@@ -181,12 +178,11 @@
 
 <script>
     let conf = { op: '', digits: 1, terms: 2, mode: '' };
-    let game = { pool: [], skipped: [], idx: 0, timer: null, start: 0, goal: 10, timeLimit: 60 };
+    let game = { pool: [], idx: 0, timer: null, start: 0 };
 
     const show = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        const target = document.getElementById(id);
-        target.classList.add('active');
+        document.getElementById(id).classList.add('active');
     };
 
     const upd = (k, v) => { conf[k] = parseInt(v); document.getElementById(`val-${k}`).innerText = v; };
@@ -199,11 +195,8 @@
 
     function init(mode) {
         conf.mode = mode;
-        game.goal = parseInt(document.getElementById('cfg-sprint').value) || 10;
-        game.timeLimit = parseInt(document.getElementById('cfg-timed').value) || 60;
-        game = { ...game, pool: [], skipped: [], idx: 0, start: Date.now() };
-        
-        let count = (mode === 'unlimited') ? 9999 : game.goal;
+        game = { pool: [], idx: 0, start: Date.now() };
+        let count = (mode === 'unlimited') ? 999 : parseInt(document.getElementById('cfg-sprint').value);
         for(let i=0; i<count; i++) game.pool.push(genMath());
         
         document.getElementById('ans-rem').style.display = (conf.op === 'div') ? 'block' : 'none';
@@ -261,9 +254,9 @@
         const qText = document.getElementById('q-text');
         let q = game.pool[game.idx];
         
-        qText.classList.remove('q-entry');
-        void qText.offsetWidth; // 觸發重繪
-        qText.classList.add('q-entry');
+        qText.classList.remove('q-fade');
+        void qText.offsetWidth; 
+        qText.classList.add('q-fade');
 
         let ruler = document.createElement('span');
         ruler.style.cssText = "visibility:hidden; position:absolute; white-space:nowrap; font-weight:900; font-family:'Inter',sans-serif; font-size:100px;";
@@ -275,40 +268,39 @@
         qText.style.fontSize = Math.floor(Math.min(100 * ratio, 120)) + 'px';
         qText.innerText = q.text;
         
-        document.getElementById('ans-main').value = '';
+        const mainInput = document.getElementById('ans-main');
+        mainInput.value = '';
+        mainInput.classList.remove('ans-error');
         document.getElementById('ans-rem').value = '';
         document.getElementById('info-progress').innerText = (conf.mode === 'unlimited') ? '♾️' : `${game.idx + 1}/${game.pool.length}`;
-        document.getElementById('ans-main').focus();
+        mainInput.focus();
     }
 
     function check() {
         const q = game.pool[game.idx];
-        const a = parseInt(document.getElementById('ans-main').value);
-        const r = parseInt(document.getElementById('ans-rem').value) || 0;
-        const container = document.getElementById('input-container');
+        const mainInput = document.getElementById('ans-main');
+        const remInput = document.getElementById('ans-rem');
+        const a = parseInt(mainInput.value);
+        const r = parseInt(remInput.value) || 0;
         const qText = document.getElementById('q-text');
 
         if(a === q.ans && (conf.op !== 'div' || r === q.rem)) {
-            // 答對動畫
             qText.classList.add('success-glow');
             setTimeout(() => {
                 qText.classList.remove('success-glow');
-                next();
-            }, 300);
+                game.idx++;
+                if(game.idx >= game.pool.length) { alert("測驗完畢！"); show('screen-menu'); }
+                else render();
+            }, 200);
         } else {
-            // 答錯動畫
-            container.classList.add('error-shake');
-            setTimeout(() => container.classList.remove('error-shake'), 300);
+            // 閃紅 + 微震
+            mainInput.classList.remove('ans-error');
+            void mainInput.offsetWidth; 
+            mainInput.classList.add('ans-error');
         }
     }
 
-    function skip() { next(); }
-    function next() {
-        game.idx++;
-        if(game.idx >= game.pool.length) {
-            alert("FINISHED!"); show('screen-menu');
-        } else render();
-    }
+    function skip() { game.idx++; render(); }
 
     function clock() {
         clearInterval(game.timer);
@@ -321,8 +313,6 @@
     document.addEventListener('keydown', (e) => {
         if(e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
         if(e.key === 'Enter') check();
-        if(e.key === 'ArrowRight' && conf.op === 'div') document.getElementById('ans-rem').focus();
-        if(e.key === 'ArrowLeft') document.getElementById('ans-main').focus();
     });
 </script>
 </body>

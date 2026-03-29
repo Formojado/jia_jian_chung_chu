@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Matrix Elite - Pro</title>
+    <title>Math Matrix Elite - Pro v3</title>
     <style>
         :root {
             --bg: #0f172a;
@@ -58,7 +58,6 @@
             100% { transform: scale(1); color: var(--text); }
         }
 
-        /* 狀態類別 */
         .ans-error { animation: errorFlash 0.2s ease-in-out !important; }
         .success-glow { animation: successPop 0.3s ease-out; }
         .q-fade { animation: fadeIn 0.15s ease-out; }
@@ -111,7 +110,8 @@
         .btn-confirm { background: var(--primary); color: white; width: 100%; }
         .btn-skip { background: transparent; border: 3px solid var(--danger); color: var(--danger); width: 100%; }
 
-        .status-top { display: flex; justify-content: space-between; font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; font-family: monospace; }
+        .status-top { display: flex; justify-content: space-between; font-size: 1.5rem; color: #94a3b8; margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        #info-mode { color: var(--secondary); text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -160,7 +160,7 @@
 
     <div id="screen-game" class="screen">
         <div class="status-top">
-            <span id="info-mode">MODE</span>
+            <span id="info-mode">模式載入中...</span>
             <span id="info-timer">00:00</span>
             <span id="info-progress">0/0</span>
         </div>
@@ -180,6 +180,8 @@
     let conf = { op: '', digits: 1, terms: 2, mode: '' };
     let game = { pool: [], idx: 0, timer: null, start: 0 };
 
+    const opMap = { add: '+', sub: '−', mul: '×', div: '÷', mix: 'MIX' };
+
     const show = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -198,6 +200,9 @@
         game = { pool: [], idx: 0, start: Date.now() };
         let count = (mode === 'unlimited') ? 999 : parseInt(document.getElementById('cfg-sprint').value);
         for(let i=0; i<count; i++) game.pool.push(genMath());
+        
+        // 更新左上角的模式文字
+        document.getElementById('info-mode').innerText = `${conf.mode} (${opMap[conf.op]})`;
         
         document.getElementById('ans-rem').style.display = (conf.op === 'div') ? 'block' : 'none';
         show('screen-game');
@@ -293,7 +298,6 @@
                 else render();
             }, 200);
         } else {
-            // 閃紅 + 微震
             mainInput.classList.remove('ans-error');
             void mainInput.offsetWidth; 
             mainInput.classList.add('ans-error');
